@@ -31,6 +31,76 @@ Tree of Thoughts (ToT) is a powerful and flexible algorithm that significantly a
 - Iterative Depth Search
 - Any search algorithms you like? Open an issue 😊
 
+## 🧠 Obsidian Integration
+
+Integrate Tree of Thoughts with Obsidian for professional thinking capture and analysis!
+
+### Features
+
+- **Automatic Export**: ToT results export to Obsidian markdown with YAML frontmatter
+- **Bidirectional Sync**: Continuous synchronization between local exports and Obsidian vault
+- **Conflict Resolution**: Last-Write-Wins strategy for handling simultaneous edits
+- **Rich Metadata**: Algorithm, model, timestamps, scores, and token usage captured
+- **Wiki-Links**: Obsidian cross-references between related thinking notes
+- **Full Vault Integration**: Works with Obsidian plugins (Dataview, Canvas, Git, Templater)
+
+### Quick Start
+
+1. **Install Obsidian dependencies**:
+   ```bash
+   pip install PyYAML watchdog python-frontmatter
+   ```
+
+2. **Enable in Tree of Thoughts**:
+   ```python
+   from tree_of_thoughts.treeofthoughts import TreeofThoughts
+
+   tot = TreeofThoughts(
+       model=model,
+       export_to_obsidian=True,
+       vault_path="D:/Vault/Vault/"
+   )
+
+   result = tot.search(...)  # Auto-exports to Obsidian!
+   ```
+
+3. **Setup Obsidian vault**:
+   - See [OBSIDIAN_SETUP.md](OBSIDIAN_SETUP.md) for detailed configuration
+   - Recommended plugins: Dataview, Canvas, Obsidian Git, Templater
+
+### Exported Note Example
+
+```markdown
+---
+uuid: 550e8400-e29b-41d4-a716-446655440000
+type: thought
+algorithm: MonteCarloTreeofThoughts
+model: GPT-4
+timestamp: 2026-03-04T12:34:56Z
+tags: [tree-of-thoughts, reasoning, problem-solving]
+status: completed
+---
+
+# Problem: Game 24
+
+## Thinking Tree
+- **Initial State** (score: 0.87)
+  - **Branch A** (score: 0.92) ✓ Final Solution
+  - **Branch B** (score: 0.45) ✗ Invalid
+
+## Solution
+[Best solution found]
+```
+
+### Documentation
+
+For complete setup instructions, see [OBSIDIAN_SETUP.md](OBSIDIAN_SETUP.md):
+- Configuration options
+- Vault structure
+- Recommended Obsidian plugins
+- Troubleshooting guide
+- Advanced usage examples
+
 ## Basic Prompts
 
 No complex implementations, just pass in one of these prompts to your model. Head over to `prompts.txt`.
