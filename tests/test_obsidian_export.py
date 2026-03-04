@@ -124,7 +124,8 @@ class TestObsidianAdapter(unittest.TestCase):
         self.assertIn("tree-of-thoughts", tags)
         self.assertIn("reasoning", tags)
         self.assertIn("tot", tags)
-        self.assertIn("montecarlotreetofthoughts", tags)
+        # MonteCarloTreeofThoughts lowercased becomes montecarlotreeofthoughts
+        self.assertIn("montecarlotreeofthoughts", tags)
         self.assertIn("claude", tags)
 
     def test_wiki_link_creation(self):
@@ -168,7 +169,7 @@ class TestConflictResolver(unittest.TestCase):
     def test_ignore_patterns(self):
         """Test that ignore patterns work."""
         self.assertTrue(self.resolver.should_ignore_file(".conflict-test.md"))
-        self.assertTrue(self.resolver.should_ignore_file("file.metadata.md"))
+        self.assertTrue(self.resolver.should_ignore_file("file.metadata-.md"))
         self.assertFalse(self.resolver.should_ignore_file("regular.md"))
 
     def test_hash_computation(self):

@@ -113,8 +113,7 @@ class ConflictResolver:
                 "action": "create_conflict_file",
                 "winner": None,
                 "message": (
-                    "Same timestamp but different content. "
-                    "Creating conflict file."
+                    "Same timestamp but different content. " "Creating conflict file."
                 ),
                 "local_hash": local_hash,
                 "vault_hash": vault_hash,
