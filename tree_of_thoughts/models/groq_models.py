@@ -1,26 +1,30 @@
 import os
-import anthropic
 import logging
+from openai import OpenAI
 from tree_of_thoughts.models.abstract_language_model import AbstractLanguageModel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-class AnthropicLanguageModel(AbstractLanguageModel):
-    def __init__(self, api_key="", model="claude-4.5-haiku", max_tokens=1024, temperature=0.7,
-                 top_p=1, top_k=None, strategy="cot", evaluation_strategy="value", enable_ReAct_prompting=True):
-        if api_key == "" or api_key is None:
-            api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        if api_key == "":
-            raise Exception("Please provide Anthropic API key via ANTHROPIC_API_KEY environment variable")
+class GroqLanguageModel(AbstractLanguageModel):
+    """Language model using Groq's API (Grok models)"""
 
-        self.client = anthropic.Anthropic(api_key=api_key)
+    def __init__(self, api_key="", model="mixtral-8x7b-32768", max_tokens=1024, temperature=0.7,
+                 top_p=1, strategy="cot", evaluation_strategy="value", enable_ReAct_prompting=True):
+        if api_key == "" or api_key is None:
+            api_key = os.environ.get("GROQ_API_KEY", "")
+        if api_key == "":
+            raise Exception("Please provide Groq API key via GROQ_API_KEY environment variable")
+
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url="https://api.groq.com/openai/v1",
+        )
         self.model = model
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.top_p = top_p
-        self.top_k = top_k
         self.strategy = strategy
         self.evaluation_strategy = evaluation_strategy
 
@@ -28,34 +32,34 @@ class AnthropicLanguageModel(AbstractLanguageModel):
         if enable_ReAct_prompting:
             self.ReAct_prompt = "Write down your observations in format 'Observation:xxxx', then write down your thoughts in format 'Thoughts:xxxx'."
 
-        logger.info(f"Initialized AnthropicLanguageModel with model: {self.model}")
+        logger.info(f"Initialized GroqLanguageModel with model: {self.model}")
 
-    def anthropic_api_call(self, prompt, max_tokens=None, temperature=None):
-        """Call Anthropic API with retry logic"""
+    def groq_api_call(self, prompt, max_tokens=None, temperature=None):
+        """Call Groq API"""
         max_tokens = max_tokens or self.max_tokens
         temperature = temperature if temperature is not None else self.temperature
 
         try:
-            message = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
                 max_tokens=max_tokens,
                 temperature=temperature,
                 top_p=self.top_p,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
             )
-            return message.content[0].text
-        except anthropic.APIError as e:
-            logger.error(f"Anthropic API error: {e}")
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Groq API error: {e}")
             raise
 
     def generate_text(self, prompt, k):
-        """Generate k text responses for given prompt"""
+        """Generate k text responses"""
         thoughts = []
         for _ in range(k):
             try:
-                response = self.anthropic_api_call(prompt)
+                response = self.groq_api_call(prompt)
                 thoughts.append(response)
             except Exception as e:
                 logger.error(f"Error generating text: {e}")
@@ -103,7 +107,7 @@ class AnthropicLanguageModel(AbstractLanguageModel):
                     Evaluate all solutions AS A FLOAT BETWEEN 0 and 1:\n, DO NOT RETURN ANYTHING ELSE"""
 
                 try:
-                    response = self.anthropic_api_call(prompt, max_tokens=10, temperature=1)
+                    response = self.groq_api_call(prompt, max_tokens=10, temperature=1)
                     value = float(response.strip())
                     logger.info(f"Evaluated state value: {value}")
                 except ValueError:
@@ -119,7 +123,7 @@ class AnthropicLanguageModel(AbstractLanguageModel):
             prompt = f"""Given the following states of reasoning, vote for the best state utilizing a scalar value 1-10:\n{states_text}\n\nVote on the probability of this state of reasoning achieving {initial_prompt} and become very pessimistic. RETURN NOTHING ELSE"""
 
             try:
-                response = self.anthropic_api_call(prompt, max_tokens=50, temperature=1)
+                response = self.groq_api_call(prompt, max_tokens=50, temperature=1)
                 best_state_text = response.strip()
 
                 # Try to match best state to one of the given states
