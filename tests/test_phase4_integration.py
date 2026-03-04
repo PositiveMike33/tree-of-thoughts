@@ -12,7 +12,6 @@ from pathlib import Path
 
 from tree_of_thoughts.exporters.obsidian_adapter import ObsidianAdapter
 from tree_of_thoughts.sync.conflict_resolver import ConflictResolver
-from tree_of_thoughts.sync.obsidian_sync import ObsidianSync
 
 
 class TestPhase4Scenario1Create(unittest.TestCase):
@@ -93,7 +92,7 @@ class TestPhase4Scenario1Create(unittest.TestCase):
 
     def test_scenario1_sync_to_vault_creates_vault_file(self):
         """Test that exported file is synced to vault thinking directory."""
-        output_path = self.adapter.export(
+        self.adapter.export(
             self.sample_tot_data, self.metadata, "Sync Test"
         )
 
@@ -137,13 +136,11 @@ class TestPhase4Scenario2Modify(unittest.TestCase):
         vault_file = self.vault_path / "test.md"
         original_content = "Original content"
         vault_file.write_text(original_content, encoding="utf-8")
-        original_mtime = vault_file.stat().st_mtime
 
         # Create corresponding local file with older timestamp
         local_file = self.local_path / "test.md"
         local_file.write_text("Local content", encoding="utf-8")
         # Set local to older time (vault is newer)
-        older_time = original_mtime - 10
         Path(local_file).touch()
 
         # Simulate vault modification (newer timestamp)
@@ -218,7 +215,6 @@ class TestPhase4Scenario3Conflict(unittest.TestCase):
         local_file.write_text(local_content, encoding="utf-8")
 
         # Make mtimes identical by setting same time
-        same_time = vault_file.stat().st_mtime
         Path(local_file).touch()
         # This is tricky - we can't easily set exact same mtime,
         # but conflict resolver will detect different hashes with similar times
@@ -249,9 +245,7 @@ class TestPhase4Scenario3Conflict(unittest.TestCase):
 
         # If conflict detected with different content and same mtime
         if resolution["action"] == "create_conflict_file":
-            applied = self.resolver.apply_resolution(
-                resolution, local_file, vault_file
-            )
+            applied = self.resolver.apply_resolution(resolution, local_file, vault_file)
 
             # Verify conflict file was created
             self.assertTrue(applied)
@@ -276,12 +270,10 @@ class TestPhase4Scenario3Conflict(unittest.TestCase):
 
         # Create local file first (older)
         local_file.write_text("Local content", encoding="utf-8")
-        local_mtime = local_file.stat().st_mtime
 
         # Wait and create vault file (newer)
         time.sleep(0.1)
         vault_file.write_text("Vault content", encoding="utf-8")
-        vault_mtime = vault_file.stat().st_mtime
 
         # Resolve conflict
         resolution = self.resolver.resolve_conflict(local_file, vault_file)
@@ -327,12 +319,17 @@ class TestPhase4ValidationCode(unittest.TestCase):
         content = obsidian_module.read_text(encoding="utf-8")
 
         # Check for class docstrings
-        self.assertIn('class ObsidianAdapter', content)
-        self.assertIn('"""Export Tree of Thoughts results in Obsidian-compatible format."""', content)
+        self.assertIn("class ObsidianAdapter", content)
+        self.assertIn(
+            '"""Export Tree of Thoughts results in Obsidian-compatible format."""',
+            content,
+        )
 
         # Check for method docstrings
-        self.assertIn('def export(', content)
-        self.assertIn('"""Export ToT data in Obsidian format with YAML frontmatter.', content)
+        self.assertIn("def export(", content)
+        self.assertIn(
+            '"""Export ToT data in Obsidian format with YAML frontmatter.', content
+        )
 
     def test_sync_modules_have_docstrings(self):
         """Verify sync modules have proper docstrings."""
@@ -340,12 +337,12 @@ class TestPhase4ValidationCode(unittest.TestCase):
         content = conflict_resolver.read_text(encoding="utf-8")
 
         # Check class docstring
-        self.assertIn('class ConflictResolver', content)
+        self.assertIn("class ConflictResolver", content)
         self.assertIn('"""Resolve conflicts using Last Write Wins', content)
 
         # Check key methods have docstrings
-        self.assertIn('def resolve_conflict(', content)
-        self.assertIn('def apply_resolution(', content)
+        self.assertIn("def resolve_conflict(", content)
+        self.assertIn("def apply_resolution(", content)
 
 
 if __name__ == "__main__":
