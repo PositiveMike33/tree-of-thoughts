@@ -26,20 +26,50 @@ from .expert_simulator import ExpertSimulator
 from .base_skill import BaseSkill, SkillResult
 from .skill_config import SkillType, AlgorithmType, SkillConfig
 from .skills_cli import SkillsCLI
+from .skills_manager import SkillsManagementSystem, UserProfile, SkillMetrics
+from .skill_wrapper import SkillWrapper
+from .cli_handlers import (
+    SkillCLIHandler,
+    CodeReviewerCLI,
+    DecisionMakerCLI,
+    ResearchAnalystCLI,
+    ProblemSolverCLI,
+    ThesisValidatorCLI,
+    ExpertSimulatorCLI,
+    get_cli_handler,
+)
 
-__version__ = "0.1.0"
+__version__ = "1.1.0"
 
 __all__ = [
+    # Skills
     "ResearchAnalyst",
     "DecisionMaker",
     "CodeReviewer",
     "ThesisValidator",
     "ProblemSolver",
     "ExpertSimulator",
+    # Base classes
     "BaseSkill",
     "SkillResult",
+    # Configuration
     "SkillType",
     "AlgorithmType",
     "SkillConfig",
+    # Management System
+    "SkillsManagementSystem",
+    "UserProfile",
+    "SkillMetrics",
+    # Wrappers
+    "SkillWrapper",
+    # CLI
     "SkillsCLI",
+    "SkillCLIHandler",
+    "CodeReviewerCLI",
+    "DecisionMakerCLI",
+    "ResearchAnalystCLI",
+    "ProblemSolverCLI",
+    "ThesisValidatorCLI",
+    "ExpertSimulatorCLI",
+    "get_cli_handler",
 ]
