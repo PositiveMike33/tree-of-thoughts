@@ -10,3 +10,8 @@ bs4
 playwright
 duckduckgo_search
 faiss-cpu
+
+# Obsidian integration and synchronization
+PyYAML>=6.0
+watchdog>=3.0.0
+python-frontmatter>=1.0.0
