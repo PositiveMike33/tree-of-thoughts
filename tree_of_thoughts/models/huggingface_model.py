@@ -1,10 +1,20 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers import pipeline
+try:
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers import pipeline
+    HUGGINGFACE_AVAILABLE = True
+except ImportError:
+    HUGGINGFACE_AVAILABLE = False
+
 from tree_of_thoughts.models.abstract_language_model import AbstractLanguageModel
 
 
 class HuggingLanguageModel(AbstractLanguageModel):
     def __init__(self, model_name, model_tokenizer=None, verbose=False):
+        if not HUGGINGFACE_AVAILABLE:
+            raise ImportError(
+                "PyTorch is not installed. To use HuggingFace models, install with: "
+                "pip install tree-of-thoughts[huggingface]"
+            )
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_tokenizer or model_name)
         self.verbose = verbose
@@ -61,6 +71,11 @@ class HuggingLanguageModel(AbstractLanguageModel):
 @staticmethod
 class HFPipelineModel(AbstractLanguageModel):
     def __init__(self, model_name, verbose=False):
+        if not HUGGINGFACE_AVAILABLE:
+            raise ImportError(
+                "PyTorch is not installed. To use HuggingFace models, install with: "
+                "pip install tree-of-thoughts[huggingface]"
+            )
         self.model_name = model_name
         self.pipeline = pipeline("text-generation", model=model_name)
         self.verbose = verbose

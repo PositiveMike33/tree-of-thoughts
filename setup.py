@@ -21,6 +21,11 @@ setup(
     'openai',
     'transformers',
   ],
+  extras_require={
+    'huggingface': [
+      'torch>=2.0.0',
+    ],
+  },
   classifiers=[
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
