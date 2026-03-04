@@ -22,6 +22,12 @@ from .tree_of_thoughts_vault_integration import (
     VaultAwareLLMContext,
     ReportGenerator,
 )
+from .validation_engine import (
+    ResponseValidator,
+    FactChecker,
+    AutoCorrector,
+    BlindValidationEngine,
+)
 
 # Set up logging
 logging.basicConfig(
@@ -54,8 +60,15 @@ class SimplifiedVaultSync:
         self.llm_client = OpenRouterConfigManager.create_llm_client(self.config)
         self.reports = ReportGenerator(self.vault)
 
+        # Initialize validation components
+        self.validator = ResponseValidator()
+        self.fact_checker = FactChecker(self.llm_client)
+        self.auto_corrector = AutoCorrector(self.llm_client)
+        self.blind_validator = BlindValidationEngine(self.validator, self.llm_client)
+
         logger.info(f"✓ LLM Provider: {self.config.provider}")
         logger.info(f"✓ Model: {self.config.model}")
+        logger.info(f"✓ Validation engine ready")
 
     def session(
         self,
@@ -64,7 +77,10 @@ class SimplifiedVaultSync:
         language: str = "english",
         depth: int = 0,
         parent_id: Optional[str] = None,
-        verbose: bool = False
+        verbose: bool = False,
+        validate: bool = False,
+        fact_check: bool = False,
+        blind_validate: bool = False
     ) -> dict:
         """Run a single session and create nodes from response.
 
@@ -75,6 +91,9 @@ class SimplifiedVaultSync:
             depth: Tree depth for evaluation
             parent_id: Parent node ID for relationships
             verbose: Enable verbose logging
+            validate: Enable response validation
+            fact_check: Enable fact-checking
+            blind_validate: Enable triple-blind validation
 
         Returns:
             Dictionary with created nodes and response metadata
@@ -122,6 +141,40 @@ class SimplifiedVaultSync:
         is_complete = self._is_response_complete(response)
         if not is_complete:
             logger.warning("Response may be incomplete")
+
+        # Run validation if requested
+        validation_results = {}
+        if validate:
+            logger.info("[VALIDATING RESPONSE]")
+            validation_result = self.validator.validate_response(response, section)
+            validation_results["validation"] = {
+                "is_valid": validation_result.is_valid,
+                "confidence": validation_result.confidence,
+                "confidence_level": validation_result.confidence_level.value,
+                "issues": [str(i) for i in validation_result.issues],
+                "recommendations": validation_result.recommendations,
+            }
+            logger.info(f"Validation: {validation_result.get_summary()}")
+
+            if validation_result.is_valid:
+                logger.info("✓ Response validation passed")
+            else:
+                logger.warning("✗ Response validation failed")
+
+        # Run fact-checking if requested
+        if fact_check:
+            logger.info("[FACT-CHECKING RESPONSE]")
+            fact_report = self.fact_checker.generate_fact_check_report(response, section)
+            validation_results["fact_check"] = fact_report
+            logger.info(f"Found {fact_report['total_claims']} claims, "
+                       f"{fact_report['verifiable_claims']} verifiable")
+
+        # Run blind validation if requested
+        if blind_validate:
+            logger.info("[RUNNING BLIND VALIDATION (3 rounds)]")
+            blind_report = self.blind_validator.full_blind_validation(response, section)
+            validation_results["blind_validation"] = blind_report
+            logger.info(f"Consensus score: {blind_report['consensus']['final_score']:.2f}")
 
         # Parse response into thought nodes
         nodes = self._parse_response_to_nodes(
@@ -182,7 +235,7 @@ class SimplifiedVaultSync:
         logger.info(f"Nodes created: {len(created_nodes)}")
         logger.info(f"Location: {self.vault.get_section_path(vault_section)}")
 
-        return {
+        result = {
             "status": "success",
             "section": vault_section.value,
             "nodes_created": len(created_nodes),
@@ -192,6 +245,12 @@ class SimplifiedVaultSync:
             "synthesis": synthesis_file,
             "neural_map": neural_map_file,
         }
+
+        # Add validation results if any
+        if validation_results:
+            result["validation"] = validation_results
+
+        return result
 
     def _is_response_complete(self, response: str) -> bool:
         """Check if response appears complete (not truncated).
@@ -536,6 +595,21 @@ Examples:
         help="Parent node ID for relationships"
     )
     session_parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Enable response validation"
+    )
+    session_parser.add_argument(
+        "--fact-check",
+        action="store_true",
+        help="Enable fact-checking"
+    )
+    session_parser.add_argument(
+        "--blind-validate",
+        action="store_true",
+        help="Enable triple-blind validation"
+    )
+    session_parser.add_argument(
         "-v", "--verbose",
         action="store_true",
         help="Enable verbose output"
@@ -575,7 +649,10 @@ Examples:
                 language=args.language,
                 depth=args.depth,
                 parent_id=args.parent,
-                verbose=args.verbose
+                verbose=args.verbose,
+                validate=args.validate,
+                fact_check=args.fact_check,
+                blind_validate=args.blind_validate
             )
             print(json.dumps(result, indent=2, ensure_ascii=False))
             return 0
