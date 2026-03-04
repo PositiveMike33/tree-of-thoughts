@@ -3,3 +3,7 @@ from tree_of_thoughts.treeofthoughts import TreeofThoughts, MonteCarloTreeofThou
 from tree_of_thoughts.models.abstract_language_model import AbstractLanguageModel
 
 from tree_of_thoughts.models.huggingface_model import HuggingLanguageModel, HFPipelineModel
+
+from tree_of_thoughts.obsidian_vault_integration import ObsidianVaultIntegration
+from tree_of_thoughts.models.vault_aware_model import VaultAwareModel
+from tree_of_thoughts.report_generator import VaultReportGenerator

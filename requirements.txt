@@ -10,3 +10,8 @@ bs4
 playwright
 duckduckgo_search
 faiss-cpu
+
+# Obsidian vault integration
+anthropic>=0.18.0
+pyyaml>=6.0
+python-dateutil>=2.8.2

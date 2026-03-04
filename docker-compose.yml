@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  tot-vault:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tree-of-thoughts-vault:latest
+    container_name: tot-vault
+
+    # Run as the host user to avoid root-owned files in the vault
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+
+    environment:
+      # Anthropic API key — set in .env
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+
+      # Vault root inside the container (always /vault)
+      VAULT_ROOT: /vault
+
+      # Explicit section paths inside the container — guarantees note isolation
+      VAULT_PSYCHE_PATH: "${VAULT_PSYCHE_PATH:-/vault/_PSYCHE}"
+      VAULT_BRAIN_PATH: "${VAULT_BRAIN_PATH:-/vault/_BRAIN}"
+      VAULT_KNOWLEDGE_PATH: "${VAULT_KNOWLEDGE_PATH:-/vault/KNOWLEDGE}"
+      VAULT_RAPPORT_PATH: "${VAULT_RAPPORT_PATH:-/vault/RAPPORT QUOTIDIEN, HEBDOMADAIRE,MENSUEL & ANNUEL}"
+
+      # Language and model defaults (overridable per run)
+      TOT_LANGUAGE: "${TOT_LANGUAGE:-fr}"
+      ANTHROPIC_MODEL: "${ANTHROPIC_MODEL:-claude-opus-4-6}"
+      TOT_MAX_TOKENS: "${TOT_MAX_TOKENS:-1500}"
+      TOT_TEMPERATURE: "${TOT_TEMPERATURE:-0.7}"
+
+    volumes:
+      # ── Vault sections ──────────────────────────────────────────────────────
+      # Windows host paths are resolved via WSL2 Docker Desktop
+      # D:\ is accessible as /d/ inside WSL2 containers.
+      # Override these in .env if your drive letter or path differs.
+
+      - type: bind
+        source: "${VAULT_PSYCHE_HOST:-/d/Vault/Vault/_PSYCHE}"
+        target: /vault/_PSYCHE
+
+      - type: bind
+        source: "${VAULT_BRAIN_HOST:-/d/Vault/Vault/_BRAIN}"
+        target: /vault/_BRAIN
+
+      - type: bind
+        source: "${VAULT_KNOWLEDGE_HOST:-/d/Vault/Vault/KNOWLEDGE}"
+        target: /vault/KNOWLEDGE
+
+      # Path with spaces must be quoted in YAML
+      - type: bind
+        source: "${VAULT_RAPPORT_HOST:-/d/Vault/Vault/RAPPORT QUOTIDIEN, HEBDOMADAIRE,MENSUEL & ANNUEL}"
+        target: "/vault/RAPPORT QUOTIDIEN, HEBDOMADAIRE,MENSUEL & ANNUEL"
+
+      # ── Logs (persisted on host) ─────────────────────────────────────────
+      - type: bind
+        source: "${LOGS_HOST:-./logs}"
+        target: /app/logs
+
+    # Default command — overridden by docker-compose run arguments
+    # Example: docker-compose run tot-vault --prompt "..." --algorithm BFS
+    command: []
