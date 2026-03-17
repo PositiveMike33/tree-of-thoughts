@@ -38,6 +38,27 @@
         "dashboard_update": "THIRTY3/daily/INDEX_DAILY.md",
         "widget_location": "_BRAIN/DASHBOARD.md"
       }
+    },
+    "architecte-fiscal": {
+      "enabled": true,
+      "name": "L'Architecte Fiscal Québécois",
+      "description": "Stratège fiscal QC/CA - Audit FinSov et optimisation 4 Boucliers pour Michael Gauthier Guillet",
+      "schedule": {
+        "enabled": false
+      },
+      "manual_trigger": {
+        "enabled": true,
+        "command": "/audit-fiscal",
+        "description": "Lancer un audit fiscal complet (FinSov + 4 Boucliers)"
+      },
+      "data_sources": {
+        "primary": ["../mikeg/README.md"],
+        "calculator": "../mikeg/source/calculateur_fiscal/calculs_2025.py",
+        "cross_repo": "PositiveMike33/mikeg"
+      },
+      "output_targets": {
+        "audit_report": "../mikeg/source/rapports/audit_fiscal_2025.md"
+      }
     }
   },
 
