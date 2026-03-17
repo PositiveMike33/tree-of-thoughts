@@ -38,6 +38,42 @@
         "dashboard_update": "THIRTY3/daily/INDEX_DAILY.md",
         "widget_location": "_BRAIN/DASHBOARD.md"
       }
+    },
+
+    "architecte-fiscal": {
+      "enabled": true,
+      "name": "Architecte Fiscal",
+      "description": "Agent fiscal IA - Quebec/Canada 2025-2026 (ToT/BFS)",
+      "personality_source": "PyAIPersonality.personnalite.ArchitecteFiscal",
+      "schedule": {
+        "enabled": false
+      },
+      "manual_trigger": {
+        "enabled": true,
+        "command": "/audit-fiscal",
+        "description": "Lancer une analyse fiscale avec raisonnement Tree of Thoughts"
+      },
+      "data_sources": {
+        "primary": [
+          "mikeg/README.md"
+        ],
+        "secondary": [
+          "THIRTY3/daily/",
+          "REPORT/Declassified/"
+        ]
+      },
+      "output_targets": {
+        "main_report": "_BRAIN/FISCAL_ANALYSIS.md",
+        "declassified": "REPORT/Declassified/"
+      },
+      "config": {
+        "mode": "ULTRA-THINK",
+        "algorithme": "BFS",
+        "profondeur_max": 4,
+        "branches": 3,
+        "annee_fiscale": "2025-2026",
+        "juridiction": ["federal", "quebec"]
+      }
     }
   },
 

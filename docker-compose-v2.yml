@@ -305,6 +305,47 @@ services:
       - "com.ascended33.service=report-generator"
       - "com.ascended33.type=reporting"
 
+  # Fiscal Agent Service (Architecte Fiscal - PyAIPersonality)
+  fiscal-agent:
+    container_name: fiscal-agent
+    image: fiscal-agent:latest
+    build:
+      context: ./_INFRASTRUCTURE
+      dockerfile: Dockerfile.fiscal-agent
+    restart: unless-stopped
+    volumes:
+      - fiscal-data:/app/data
+      - ./:/vault:rw
+    networks:
+      - ascended33-network
+    environment:
+      - VAULT_PATH=/vault
+      - PERSONALITY_MODULE=PyAIPersonality
+      - FISCAL_YEAR=2025-2026
+      - REASONING_MODE=ULTRA-THINK
+      - TOT_ALGORITHM=BFS
+      - TOT_MAX_DEPTH=4
+      - TOT_BRANCHES=3
+      - JURIDICTION=federal,quebec
+      - HACKERGPT_URL=http://th3-hackergpt:8000
+      - REPORT_GENERATOR_URL=http://report-generator:8005
+      - LOG_LEVEL=info
+    ports:
+      - "8006:8006"
+    depends_on:
+      - th3-hackergpt
+      - report-generator
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.ascended33.service=fiscal-agent"
+      - "com.ascended33.type=ai-agent"
+      - "com.ascended33.personality=architecte-fiscal"
+
 # ============================================================================
 # VOLUMES
 # ============================================================================
@@ -336,6 +377,8 @@ volumes:
   vault-index-data:
     driver: local
   report-data:
+    driver: local
+  fiscal-data:
     driver: local
 
 # ============================================================================
